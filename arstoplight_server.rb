@@ -1,8 +1,20 @@
 #!/usr/bin/env ruby
 
-%w(socket rubygems serialport).each do |m|
+%w(socket rubygems serialport yajl pp).each do |m|
   require m
 end
+
+test_json = '{
+  "name":"JobName",
+  "url":"JobUrl",
+  "build":{
+    "number":1,
+    "phase":"STARTED",
+    "status":"FAILED",
+    "url":"job/project/5",
+    "fullUrl":"http://ci.jenkins.org/job/project/5"
+  }
+}'
 
 PORT = 22222
 RESPONSES = ['1', '2', '3', 'F']
