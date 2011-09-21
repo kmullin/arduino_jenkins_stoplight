@@ -4,24 +4,32 @@
   require m
 end
 
-DEBUG = true
-PROJECT = 'testing'
+DEBUG = false
+PROJECT = 'Production'
 PORT = 22222
 RESPONSES = %w(1 2 3 F B)
 SERIAL_PORT, SPEED = '/dev/tty.usbmodemfd121', 9600
 
+# Jenkins notification payload for 1 test
+#{"name":"testing","url":"job/testing/","build":{"full_url":"https:///jenkins/job/testing/1/","number":1,"phase":"STARTED","url":"job/testing/1/"}}
+#{"name":"testing","url":"job/testing/","build":{"full_url":"https:///jenkins/job/testing/1/","number":1,"phase":"COMPLETED","status":"SUCCESS","url":"job/testing/1/"}}
+#{"name":"testing","url":"job/testing/","build":{"full_url":"https:///jenkins/job/testing/1/","number":1,"phase":"FINISHED","status":"SUCCESS","url":"job/testing/1/"}}
+
 def check_response(json_hash)
   if json_hash["name"] == PROJECT
     if json_hash["build"]["phase"] == 'FINISHED'
-      if json_hash["build"]["status"] == 'SUCCESS'
-        write_serial('3')
-      elsif json_hash["build"]["status"] == 'FAILURE'
-        write_serial('1')
-      elsif json_hash["build"]["status"] == 'ABORTED'
-        write_serial('F')
-      else
-        write_serial('2')
+      case json_hash["build"]["status"]
+        when 'SUCCESS'
+          write_serial('3')
+        when 'FAILURE'
+          write_serial('1')
+        when 'ABORTED'
+          write_serial('F')
+        else
+          write_serial('2')
       end
+    elsif json_hash["build"]["phase"] == 'STARTED'
+      write_serial('B')
     end
   end
 end
