@@ -13,14 +13,15 @@ void allOff()
     analogWrite(GREENPin, 0);
     analogWrite(REDPin, 0);
     analogWrite(BLUEPin, 0);
+    if (DEBUG) {
+        Serial.println("Green Led Off");
+        Serial.println("Red Led Off");
+        Serial.println("Blue Led Off");
+    }
 }
 
-void setup()
+void selfTest()
 { // test all LEDs and end with Blue
-    pinMode(REDPin, OUTPUT);
-    pinMode(GREENPin, OUTPUT);
-    pinMode(BLUEPin, OUTPUT);
-    Serial.begin(9600);
     turnOn(GREENPin);
     delay(stall);
     turnOn(REDPin);
@@ -29,6 +30,15 @@ void setup()
     delay(stall);
     allOff();
     turnOn(BLUEPin);
+}
+
+void setup()
+{ // setup serial port and pins
+    pinMode(REDPin, OUTPUT);
+    pinMode(GREENPin, OUTPUT);
+    pinMode(BLUEPin, OUTPUT);
+    Serial.begin(9600);
+    selfTest();
 }
 
 void turnOn(int pin)
@@ -65,12 +75,18 @@ void blinkem()
     }
 }
 
+void fade(int pin)
+{
+    Serial.println("We would fade LED");
+}
+
 int checkSerial()
 { /* INPUT:
   1 - Red
   2 - Blue
   3 - Green
-  F - Blink all (Fail, or error) */
+  F - Blink all (Fail, or error)
+  B - Building (Fade) */
     int stuff = 0;
     if (Serial.available() > 0) {
         stuff = Serial.read();
@@ -92,6 +108,10 @@ int checkSerial()
           break;
         case 70:  // if capital 'F' blink all
           blinkem();
+          break;
+        case 66:  // if capital 'B' fade
+          fade(BLUEPin);
+          break;
         default:
           stuff = 0;  // else set back to 0
     }
