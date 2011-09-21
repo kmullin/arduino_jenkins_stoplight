@@ -1,4 +1,4 @@
-const bool DEBUG = true;  // output anything to the console?
+const bool DEBUG = false;  // output anything to the console?
 
 const int REDPin = 3;    // RED pin of the LED to PWM pin 3
 const int GREENPin = 5;  // GREEN pin of the LED to PWM pin 5
@@ -7,6 +7,8 @@ const int BLUEPin = 6;   // BLUE pin of the LED to PWM pin 6
 const int stall = 150; // time in MS to wait between blinks for test and failure
 
 int brightness = 255; // LED brightness
+int lastPin = 0;
+int fadeAmount = 5;
 
 void allOff()
 { // turn off all pins
@@ -44,6 +46,7 @@ void setup()
 void turnOn(int pin)
 { // turn on one at a time
     analogWrite(pin, brightness);
+    lastPin = pin;
     if (DEBUG) {
         switch (pin) {
           case REDPin:
@@ -75,9 +78,22 @@ void blinkem()
     }
 }
 
-void fade(int pin)
+void fade()
 {
-    Serial.println("We would fade LED");
+    int new_bright = brightness;
+    int new_fade = fadeAmount;
+    while (checkSerial() == 0) {
+        analogWrite(lastPin, new_bright);
+        if (DEBUG) {
+            Serial.print("FADE: Bright ");
+            Serial.println(new_bright);
+        }
+        if (new_bright == 0 || new_bright == 255) {
+            new_fade = -new_fade;
+        }
+        new_bright = new_bright + new_fade;
+        delay(30);
+    }
 }
 
 int checkSerial()
@@ -110,7 +126,7 @@ int checkSerial()
           blinkem();
           break;
         case 66:  // if capital 'B' fade
-          fade(BLUEPin);
+          fade();
           break;
         default:
           stuff = 0;  // else set back to 0
