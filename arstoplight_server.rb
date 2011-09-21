@@ -7,7 +7,7 @@ end
 DEBUG = true
 PROJECT = 'testing'
 PORT = 22222
-RESPONSES = ['1', '2', '3', 'F']
+RESPONSES = %w(1 2 3 F B)
 SERIAL_PORT, SPEED = '/dev/tty.usbmodemfd121', 9600
 
 def check_response(json_hash)
