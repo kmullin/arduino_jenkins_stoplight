@@ -4,11 +4,35 @@ const int REDPin = 3;    // RED pin of the LED to PWM pin 3
 const int GREENPin = 5;  // GREEN pin of the LED to PWM pin 5
 const int BLUEPin = 6;   // BLUE pin of the LED to PWM pin 6
 
-const int stall = 100; // time in MS to wait between blinks for test and failure
+const int StatusLED = 13;
+const int PushButton = 7; // sensor for pushbutton
+
+const int stall = 175; // time in MS to wait between blinks for test and failure
 const int brightness = 255; // LED brightness
 
 int lastPin = 0;
 int fadeAmount = 5;
+
+int state = 1;
+int old_state = 0;
+
+void setup()
+{ // setup serial port and pins
+  pinMode(REDPin, OUTPUT);
+  pinMode(GREENPin, OUTPUT);
+  pinMode(BLUEPin, OUTPUT);
+  pinMode(StatusLED, OUTPUT);
+  pinMode(PushButton, INPUT);
+  Serial.begin(9600);
+  selfTest();
+}
+
+int delay_check(int time) 
+{
+  int check = checkPushButton();
+  delay(time);
+  return check;
+}
 
 void allOff()
 { // turn off all pins
@@ -25,22 +49,13 @@ void allOff()
 void selfTest()
 { // test all LEDs and end with Blue
   turnOn(GREENPin);
-  delay(stall);
+  delay_check(stall);
   turnOn(REDPin);
-  delay(stall);
+  delay_check(stall);
   turnOn(BLUEPin);
-  delay(stall);
+  delay_check(stall);
   allOff();
   turnOn(BLUEPin);
-}
-
-void setup()
-{ // setup serial port and pins
-  pinMode(REDPin, OUTPUT);
-  pinMode(GREENPin, OUTPUT);
-  pinMode(BLUEPin, OUTPUT);
-  Serial.begin(9600);
-  selfTest();
 }
 
 void turnOn(int pin)
@@ -65,16 +80,17 @@ void turnOn(int pin)
 
 void blinkem()
 { // blink them all until another entry comes in the serial
-  while (checkSerial() == 0) {
+  int Lights[] = {
+    REDPin, BLUEPin, GREENPin      };
+  int temp = lastPin;
+  int button;
+  while ((checkSerial() == 0) && (button != 1)) {
     allOff();
-    turnOn(REDPin);
-    delay(stall);
-    allOff();
-    turnOn(BLUEPin);
-    delay(stall);
-    allOff();
-    turnOn(GREENPin);
-    delay(stall);
+    while (temp == lastPin) {
+      temp = Lights[random(3)];
+    }
+    turnOn(temp);
+    button = delay_check(stall);
   }
 }
 
@@ -82,7 +98,8 @@ void fade()
 {
   int new_bright = brightness;
   int new_fade = fadeAmount;
-  while (checkSerial() == 0) {
+  int button = 0;
+  while ((checkSerial() == 0) && (button != 1)) {
     analogWrite(lastPin, new_bright);
     if (DEBUG) {
       Serial.print("FADE: Bright ");
@@ -92,8 +109,19 @@ void fade()
       new_fade = -new_fade;
     }
     new_bright = new_bright + new_fade;
-    delay(stall / 10);
+    button = delay_check(stall / 10);
   }
+  turnOn(lastPin);
+}
+
+int checkPushButton()
+{
+  int val = digitalRead(PushButton);
+
+  if (val == HIGH) {
+    return 0;
+  }
+  return 1;
 }
 
 int checkSerial()
@@ -101,8 +129,8 @@ int checkSerial()
  1 - Red
  2 - Blue
  3 - Green
- F - Blink all (Fail, or error)
- B - Building (Fade) */
+ B - Blink all (Fail, or error)
+ F - Building (Fade) */
   int stuff = 0;
   if (Serial.available() > 0) {
     stuff = Serial.read();
@@ -123,19 +151,26 @@ int checkSerial()
     allOff();
     turnOn(GREENPin);
     break;
-  case 70:  // if capital 'F' blink all
+  case 66:  // if capital 'B' blink all
     blinkem();
     break;
-  case 66:  // if capital 'B' fade
+  case 70:  // if capital 'F' fade
     fade();
     break;
   default:
     stuff = 0;
   }
+  checkPushButton();
   return stuff;
 }
 
 void loop()
 { // main loop that just reads from serial as fast as it can
+  int button = 0;
   checkSerial();
+  button = checkPushButton();
+  if (button == 1) {
+    Serial.println(1);
+    delay(1000);
+  }
 }
