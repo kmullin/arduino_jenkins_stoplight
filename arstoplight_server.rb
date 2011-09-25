@@ -24,12 +24,12 @@ def check_response(json_hash)
         when 'FAILURE'
           write_serial('1')
         when 'ABORTED'
-          write_serial('F')
+          write_serial('B')
         else
           write_serial('2')
       end
     elsif json_hash["build"]["phase"] == 'STARTED'
-      write_serial('B')
+      write_serial('F')
     end
   end
 end
