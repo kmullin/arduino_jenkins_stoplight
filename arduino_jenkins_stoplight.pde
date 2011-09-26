@@ -4,11 +4,13 @@ const int REDPin = 3;    // RED pin of the LED to PWM pin 3
 const int GREENPin = 5;  // GREEN pin of the LED to PWM pin 5
 const int BLUEPin = 6;   // BLUE pin of the LED to PWM pin 6
 
-const int StatusLED = 13;
+const int StatusLED = 13; // blink this light when button is pushed
 const int PushButton = 7; // sensor for pushbutton
 
 const int stall = 175; // time in MS to wait between blinks for test and failure
 const int brightness = 255; // LED brightness
+
+const char WORD[] = "BUILD"; // Magic word
 
 unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
@@ -117,11 +119,12 @@ int checkPushButton()
 {
   if (digitalRead(PushButton) == HIGH) {
     old_state = HIGH;
+    digitalWrite(StatusLED, LOW);
     return 0;
   }
+  digitalWrite(StatusLED, HIGH);
   if (old_state != LOW) {
     // Button Pushed and not already pressed
-    Serial.println("Press");
     old_state = LOW;
     return 1;
   }
@@ -129,11 +132,11 @@ int checkPushButton()
 
 int checkSerial()
 { /* INPUT:
- 1 - Red
- 2 - Blue
- 3 - Green
- B - Blink all (Fail, or error)
- F - Building (Fade) */
+  1 - Red
+  2 - Blue
+  3 - Green
+  B - Blink all (Fail, or error)
+  F - Building (Fade) */
   int stuff = 0;
   if (Serial.available() > 0) {
     stuff = Serial.read();
@@ -142,22 +145,22 @@ int checkSerial()
     }
   }
   switch (stuff) {
-  case 49: // 1 in ASCII
+  case '1':
     allOff();
     turnOn(REDPin);
     break;
-  case 50:
+  case '2':
     allOff();
     turnOn(BLUEPin);
     break;
-  case 51:
+  case '3':
     allOff();
     turnOn(GREENPin);
     break;
-  case 66:  // if capital 'B' blink all
+  case 'B':
     blinkem();
     break;
-  case 70:  // if capital 'F' fade
+  case 'F':
     fade();
     break;
   default:
@@ -170,6 +173,6 @@ void loop()
 { // main loop that just reads from serial as fast as it can
   checkSerial();
   if (checkPushButton() == 1) {
-    Serial.println(1);
+    Serial.println(WORD);
   }
 }
