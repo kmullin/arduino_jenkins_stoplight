@@ -15,6 +15,7 @@ unsigned long currentMillis = 0;
 
 int lastPin = 0;
 int fadeAmount = 5;
+int old_state = 0;
 
 void setup()
 { // setup serial port and pins
@@ -76,8 +77,7 @@ void blinkem()
   int Lights[] = {
     REDPin, BLUEPin, GREENPin      };
   int temp = lastPin;
-  int button = 0;
-  while ((checkSerial() == 0) && (button != 1)) {
+  while ((checkSerial() == 0) && (checkPushButton() != 1)) {
     // Loop until button is pushed, or something valid comes thru serial
     currentMillis = millis();
     if (currentMillis - previousMillis >= stall) {
@@ -88,7 +88,6 @@ void blinkem()
       }
       turnOn(temp);
     }
-    button = checkPushButton();
   }
 }
 
@@ -96,8 +95,7 @@ void fade()
 {
   int new_bright = brightness;
   int new_fade = fadeAmount;
-  int button = 0;
-  while ((checkSerial() == 0) && (button != 1)) {
+  while ((checkSerial() == 0) && (checkPushButton() != 1)) {
     currentMillis = millis();
     if (currentMillis - previousMillis >= (stall / 10)) {
       previousMillis = currentMillis;
@@ -111,19 +109,22 @@ void fade()
       }
       new_bright = new_bright + new_fade;
     }
-    button = checkPushButton();
   }
   turnOn(lastPin);
 }
 
 int checkPushButton()
 {
-  int val = digitalRead(PushButton);
-
-  if (val == HIGH) {
+  if (digitalRead(PushButton) == HIGH) {
+    old_state = HIGH;
     return 0;
   }
-  return 1;
+  if (old_state != LOW) {
+    // Button Pushed and not already pressed
+    Serial.println("Press");
+    old_state = LOW;
+    return 1;
+  }
 }
 
 int checkSerial()
@@ -162,17 +163,13 @@ int checkSerial()
   default:
     stuff = 0;
   }
-  checkPushButton();
   return stuff;
 }
 
 void loop()
 { // main loop that just reads from serial as fast as it can
-  int button = 0;
   checkSerial();
-  button = checkPushButton();
-  if (button == 1) {
+  if (checkPushButton() == 1) {
     Serial.println(1);
-    delay(1000);
   }
 }
