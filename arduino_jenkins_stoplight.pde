@@ -172,6 +172,6 @@ void loop()
 { // main loop that just reads from serial as fast as it can
   checkSerial();
   if (checkPushButton() == 1) {
-    Serial.println(WORD);
+    Serial.print(WORD);
   }
 }
