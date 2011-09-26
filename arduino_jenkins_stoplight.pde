@@ -16,7 +16,6 @@ unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
 
 int lastPin = 0;
-int fadeAmount = 5;
 int old_state = 0;
 
 void setup()
@@ -96,7 +95,7 @@ void blinkem()
 void fade()
 {
   int new_bright = brightness;
-  int new_fade = fadeAmount;
+  int new_fade = 5;
   while ((checkSerial() == 0) && (checkPushButton() != 1)) {
     currentMillis = millis();
     if (currentMillis - previousMillis >= (stall / 10)) {
