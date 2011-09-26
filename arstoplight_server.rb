@@ -4,14 +4,14 @@
   require m
 end
 
-DEBUG = false
+DEBUG = true
 PROJECT = 'Production'
 PORT = 22222
 RESPONSES = %w(1 2 3 F B)
-SERIAL_PORT, SPEED = '/dev/tty.usbmodemfd121', 9600
+SERIAL_PORT, SPEED = '/dev/tty.usbmodemfa141', 9600
 
-JENKINS_URL = "https://com/jenkins/job/#{PROJECT}"
-USERNAME, PASSWORD = '', ''
+JENKINS_URL = ""
+USERNAME, PASSWORD = '',''
 # Jenkins notification payload for 1 test
 #{"name":"testing","url":"job/testing/","build":{"full_url":"https:///jenkins/job/testing/1/","number":1,"phase":"STARTED","url":"job/testing/1/"}}
 #{"name":"testing","url":"job/testing/","build":{"full_url":"https:///jenkins/job/testing/1/","number":1,"phase":"COMPLETED","status":"SUCCESS","url":"job/testing/1/"}}
@@ -44,15 +44,16 @@ def write_serial(data)
   end
 end
 
-def requestBuild
-  http = Net::HTTP.new(url, 443)
+def request_build
+  url = URI.parse(JENKINS_URL)
+  http = Net::HTTP.new(url.host, 443)
   http.use_ssl = true
   http.start do |http|
-    req = Net::HTTP::Get.new('/jenkins/job/testing/build?delay=0sec')
+    req = Net::HTTP::Get.new(url.path)
     req.basic_auth USERNAME, PASSWORD
     http.request(req)
   end
-  puts "requesting build"
+  puts "requesting build #{JENKINS_URL}"
 end
 
 begin
@@ -69,7 +70,7 @@ loop {
   begin
     client = @server.accept_nonblock
   rescue
-    requestBuild if @serial.read =~ /BUILD/
+    request_build if @serial.read =~ /BUILD/
     retry
   end
   count += 1
