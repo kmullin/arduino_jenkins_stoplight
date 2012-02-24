@@ -1,13 +1,20 @@
 #!/usr/bin/env ruby
 
-%w(socket rubygems serialport yajl pp net/https).each do |m|
+begin
+  require 'serialport'
+rescue LoadError
+  require 'rubygems'
+  require 'serialport'
+end
+
+%w(socket yajl pp net/https).each do |m|
   require m
 end
 
-DEBUG = true
-PROJECT = 'Production'
-PORT = 22222
-RESPONSES = %w(1 2 3 F B)
+DEBUG = true # print debug information
+PROJECT = 'Production' # name of project to build
+PORT = 22222 # port to listen on for notifications from Jenkins
+RESPONSES = %w(1 2 3 F B) # these are the ASCII characters that are valid on the arduino
 SERIAL_PORT, SPEED = '/dev/tty.usbmodemfa141', 9600
 
 JENKINS_URL = ""
